@@ -1,0 +1,66 @@
+version: '3'
+
+services:
+  # nginx
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    volumes:
+      - ./www/:/usr/share/nginx/html/
+      - ./etc/nginx/:/etc/nginx/conf.d/
+      - ./log/nginx/:/var/log/nginx/
+    networks:
+      lnmp:
+        ipv4_address: 172.30.0.5
+    ports:
+      - "80:80"
+  # mysql
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    volumes:
+      - ./etc/mysql:/etc/mysql/
+      - ./log/mysql:/var/log/mysql/
+      - ./mysql:/var/lib/mysql-files/
+    networks:
+      lnmp:
+        ipv4_address: 172.30.0.4
+    ports:
+      - "33060:3306"
+    environment: {
+      MYSQL_ROOT_PASSWORD=root
+    }
+  # redis
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    networks:
+      lnmp:
+        ipv4_address: 172.30.0.3
+    ports:
+      - "6379:6379"
+  # php-fpm
+  php-fpm:
+    # image: php:7.4-fpm
+    build: ./etc/php
+    container_name: php-fpm
+    restart: always
+    volumes:
+      - ./www:/var/www/html/
+      - ./etc/php:/usr/local/etc/php/
+      - ./log/php:/var/log/php/
+    networks:
+      lnmp:
+        ipv4_address: 172.30.0.2
+    ports:
+      - "9000:9000"
+# network
+networks:
+  lnmp:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
